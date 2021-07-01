@@ -6,7 +6,8 @@ inMenu			= true
 local showblips	= true
 local atbank	= false
 local bankMenu	= true
-local banks = {
+
+banks = {
 	{name="Bank", id=108, x=150.266, y=-1040.203, z=29.374},
 	{name="Bank", id=108, x=-1212.980, y=-330.841, z=37.787},
 	{name="Bank", id=108, x=-2962.582, y=482.627, z=15.703},
@@ -17,7 +18,7 @@ local banks = {
 	{name="Bank", id=108, x=1175.0643310547, y=2706.6435546875, z=38.094036102295}
 }	
 
-local atms = {
+atms = {
 	{name="ATM", id=277, x=-386.733, y=6045.953, z=31.501},
 	{name="ATM", id=277, x=-284.037, y=6224.385, z=31.187},
 	{name="ATM", id=277, x=-284.037, y=6224.385, z=31.187},
@@ -110,6 +111,100 @@ local atms = {
 	{name="ATM", id=277, x=-1286.24, y=-213.39, z=42.45},
 	{name="ATM", id=277, x=-1282.54, y=-210.45, z=42.45},
 }
+
+
+
+CreateThread(function()
+    local x,y,z = table.unpack(GetEntityCoords(PlayerPedId()))
+    local data = {name='haTest',x=x,y=y,z=z}
+    TriggerEvent('Threads:AddPosition','Test',data,1.0,function(result)
+        if result.action == 'enter' then 
+            local data = result.data
+            print('['..result.actionname..']NEW '..data.name.."is arrived ,pos:"..data.x ..' '.. data.y ..' '.. data.z)
+   
+            Threads.CreateLoop("Test",0,function()
+                DisplayHelpText("Appuie sur ~INPUT_PICKUP~ pour accèder à tes comptes ~b~")
+                if IsControlJustPressed(1, 38) then
+                    inMenu = true
+                    SetNuiFocus(true, true)
+                    SendNUIMessage({type = 'openGeneral'})
+                    TriggerServerEvent('bank:balance')
+                    local ped = GetPlayerPed(-1)
+                end
+                if IsControlJustPressed(1, 322) then
+                    inMenu = false
+                    SetNuiFocus(false, false)
+                    SendNUIMessage({type = 'close'})
+                end
+            end )
+        else 
+            if Threads.IsActionOfLoopAlive("Test") then Threads.KillActionOfLoop("Test") end
+            local data = result.data
+            print('NEW '..data.name.."is exited ,pos:"..data.x ..' '.. data.y ..' '.. data.z)
+            
+        end 
+    end)
+    TriggerEvent('Threads:AddPositions','BankAction',banks,1.0,function(result)
+        if result.action == 'enter' then 
+            local data = result.data
+            print('NEW '..data.name.."is arrived ,pos:"..data.x ..' '.. data.y ..' '.. data.z)
+   
+            Threads.CreateLoop("banks",0,function()
+                DisplayHelpText("Appuie sur ~INPUT_PICKUP~ pour accèder à tes comptes ~b~")
+                if IsControlJustPressed(1, 38) then
+                    inMenu = true
+                    SetNuiFocus(true, true)
+                    SendNUIMessage({type = 'openGeneral'})
+                    TriggerServerEvent('bank:balance')
+                    local ped = GetPlayerPed(-1)
+                end
+                if IsControlJustPressed(1, 322) then
+                    inMenu = false
+                    SetNuiFocus(false, false)
+                    SendNUIMessage({type = 'close'})
+                end
+            end )
+        else 
+            if Threads.IsActionOfLoopAlive("banks") then Threads.KillActionOfLoop("banks") end
+            local data = result.data
+            print('NEW '..data.name.."is exited ,pos:"..data.x ..' '.. data.y ..' '.. data.z)
+            
+        end 
+    end)
+    
+    TriggerEvent('Threads:AddPositions','ATMAction',atms,1.0,function(result)
+        if result.action == 'enter' then 
+            local data = result.data
+            print('NEW '..data.name.."is arrived ,pos:"..data.x ..' '.. data.y ..' '.. data.z)
+            Threads.CreateLoop("atm",0,function()
+                DisplayHelpText("Appuie sur ~INPUT_PICKUP~ pour accèder à tes comptes ~b~")
+                if IsControlJustPressed(1, 38) then
+                    inMenu = true
+                    SetNuiFocus(true, true)
+                    SendNUIMessage({type = 'openGeneral'})
+                    TriggerServerEvent('bank:balance')
+                    local ped = GetPlayerPed(-1)
+                end
+                if IsControlJustPressed(1, 322) then
+                    inMenu = false
+                    SetNuiFocus(false, false)
+                    SendNUIMessage({type = 'close'})
+                end
+            end )
+        else 
+            local data = result.data
+            print('NEW '..data.name.."is exited ,pos:"..data.x ..' '.. data.y ..' '.. data.z)
+            if Threads.IsActionOfLoopAlive("atm") then Threads.KillActionOfLoop("atm") end
+            
+        end 
+    end)
+    
+    
+    
+   
+   
+end)
+
 --================================================================================================
 --==                                THREADING - DO NOT EDIT                                     ==
 --================================================================================================
@@ -117,12 +212,18 @@ local atms = {
 --===============================================
 --==           Base ESX Threading              ==
 --===============================================
+
+--[==========[
 Citizen.CreateThread(function()
 	while ESX == nil do
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 		Citizen.Wait(0)
 	end
 end)
+
+--]==========]
+
+
 
 
 
@@ -131,6 +232,7 @@ end)
 --===============================================
 --==             Core Threading                ==
 --===============================================
+--[=[
 if bankMenu then
 	Citizen.CreateThread(function()
 	while true do
@@ -155,6 +257,7 @@ if bankMenu then
 	end
 	end)
 end
+--]=]
 
 
 --===============================================
@@ -163,6 +266,22 @@ end
 Citizen.CreateThread(function()
 	if showblips then
 		for k,v in ipairs(banks)do
+		local blip = AddBlipForCoord(v.x, v.y, v.z)
+		SetBlipSprite(blip, v.id)
+		SetBlipScale(blip, 0.7)
+		SetBlipAsShortRange(blip, true)
+		if v.principal ~= nil and v.principal then
+			SetBlipColour(blip, 77)
+		end
+		BeginTextCommandSetBlipName("STRING")
+		AddTextComponentString(tostring(v.name))
+		EndTextCommandSetBlipName(blip)
+		end
+	end
+end)
+Citizen.CreateThread(function()
+	if showblips then
+		for k,v in ipairs(atms)do
 		local blip = AddBlipForCoord(v.x, v.y, v.z)
 		SetBlipSprite(blip, v.id)
 		SetBlipScale(blip, 0.7)
@@ -251,6 +370,7 @@ end)
 --===============================================
 --==            Capture Bank Distance          ==
 --===============================================
+--[=[
 function nearBank()
 	local player = GetPlayerPed(-1)
 	local playerloc = GetEntityCoords(player, 0)
@@ -277,9 +397,10 @@ function nearATM()
 	end
 end
 
-
+--]=]
 function DisplayHelpText(str)
 	SetTextComponentFormat("STRING")
 	AddTextComponentString(str)
 	DisplayHelpTextFromStringLabel(0, 0, 1, -1)
 end
+
