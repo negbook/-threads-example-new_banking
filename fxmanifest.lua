@@ -7,8 +7,7 @@ client_scripts{
 }
 
 dependencies {
-	'threads',
-    'arrival'
+	'threads'
 }
 
 server_scripts {
